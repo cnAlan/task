@@ -17,7 +17,7 @@
     task get [task]
 ```
 
-### 删除一个任务：
+删除一个任务：
 ```javascript
     task remove [task]
 ```
