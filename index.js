@@ -107,7 +107,11 @@ yargs
     if(!taskExist(argv)) return false;
     find(argv.task)
       .then(doc=> {
-        console.log(`${doc.task} => ${doc.done ? '已完成':'未完成'} 创建时间：${getTime(doc.create_date)} 完成时间：${doc.done_date ? getTime(doc.done_date) : '还未完成'}`)
+        if(doc){
+          console.log(`${doc.task} => ${doc.done ? '已完成':'未完成'} 创建时间：${getTime(doc.create_date)} 完成时间：${doc.done_date ? getTime(doc.done_date) : '还未完成'}`)
+        } else {
+          console.log('没有找到任务')
+        }
         close();
       })
   })
