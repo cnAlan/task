@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-console.log(__dirname)
 const {
   getAll, close, createTask, updateTask, removeTask, doneTask, find
 } = require('./Model')
