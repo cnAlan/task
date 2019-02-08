@@ -1,37 +1,29 @@
 #!/usr/bin/env node
-const {
-  getAll, close, createTask, updateTask, removeTask, doneTask, find
-} = require('./Model')
 const yargs = require('yargs')
-const taskExist = argvs=> {
-    if(!argvs.task) {
-      console.log('请您提交正确的任务！');
+const path = require('path')
+const { get, update, remove, select, add, done } = require(path.resolve(__dirname, './lib/HandleLocalData'))
+const taskExist = (argvs, isNeedUpdate, message)=> {
+    if(argvs.task === null || (isNeedUpdate && !argvs.newTask)) {
+      console.log(message)
       return false;
     }
     return true;
 }
-const getTime = time=> {
-  const dateObj = new Date(time)
-  return `${dateObj.getFullYear()}/${dateObj.getMonth()}/${dateObj.getDay()}|${dateObj.getHours()}-${dateObj.getMinutes()}-${dateObj.getSeconds()}`
-}
 
-yargs
+const argv = yargs
   .command('add [task]', 'add task', yarg=> {
     yargs
       .positional('task', {
         default: null
       })
   }, argv=> {
-    if(!taskExist(argv)) return;
-    createTask(argv.task)
-      .then(doc=> {
-        console.log('创建任务成功')
-        close();
-      })
-      .catch(err=> {
-        console.log('已经存在此任务！')
-        close();
-      })
+    if(!taskExist(argv, null, '请输入要添加的任务')) return;
+    const adder = add(argv.task)
+    if(adder) {
+      console.log(`添加成功 \n ${adder}`)
+    } else {
+      console.log('添加失败')
+    }
   })
 
   .command('remove [task]', 'remove the task', yargs=> {
@@ -39,79 +31,61 @@ yargs
       default: null
     })
   }, argv=> {
-    if(!taskExist(argv)) return;
-    removeTask(argv.task)
-      .then(doc=> {
-        if(doc.ok) {
-          console.log('删除成功')
-        }
-        close();
-      })
+    if(!taskExist(argv, null, '请输入要删除的任务')) return;
+    const removed = remove(argv.task)
+    if(removed) {
+      console.log(`删除成功\n${removed}`)
+    } else {
+      console.log('删除失败')
+    }
   })
 
-  .command('update [task] [oldTask]', 'update the task', yargs=> {
+  .command('update [task] [newTask]', 'update the task', yargs=> {
     yargs.option('task', {
       default: null
     })
   }, argv=> {
-    if(!argv.task || !argv.oldTask) {
-      console.log('请提交任务名以及新的任务')
-      return false;
+    if(!taskExist(argv, true, '请检查参数(原来任务编号，更新任务的内容)')) return false;
+    const updated = update(argv.task, argv.newTask)
+    if(updated) {
+      console.log(`更新成功\n ${updated}`)
+    } else {
+      console.log('更新失败')
     }
-    updateTask(argv.task, argv.oldTask)
-      .then(doc=> {
-        if(doc.ok) {
-          console.log('修改成功')
-        }
-        close();
-      })
-      .catch(err=> {
-        console.log('当前已经存在新的任务名，请更换')
-        close();
-      })
   })
   .command('done [task]', 'done task', yargs=> {
     yargs.positional('task', {
       default: null
     })
   }, argv=> {
-    if(!taskExist(argv)) return;
-    doneTask(argv.task)
-      .then(doc=> {
-        if(doc.ok) {
-          console.log('已完成')
-        }else {
-          console.log('失败！')
-        }
-        close();
-      })
+    if(!taskExist(argv, null, '请输入要完成的任务编号')) return;
+
+    const doned = done(argv.task)
+    if(doned) {
+      console.log(`修改成功\n ${doned}`)
+    } else {
+      console.log(`修改失败`)
+    }
   })
-  .command('list', 'get all list', yargs=>false, argv=> {
-    getAll()
-      .then(doc=> {
-        // if(parseInt(process.version.split('.')[0].substr(1)) >= 10) {}
-        // const box = {}
-        doc.forEach(task=> {
-          console.log()
-          console.log(`${task.task} => ${task.done ? '已完成':'未完成'} 创建时间：${getTime(task.create_date)} 完成时间：${task.done_date ? getTime(task.done_date) : '还未完成'}`)
-        })
-        close();
-      })
-  })
+
   .command('get [task]', 'get list', yargs=> {
     yargs.positional('task', {
       default: null
     })
   }, argv=> {
-    if(!taskExist(argv)) return false;
-    find(argv.task)
-      .then(doc=> {
-        if(doc){
-          console.log(`${doc.task} => ${doc.done ? '已完成':'未完成'} 创建时间：${getTime(doc.create_date)} 完成时间：${doc.done_date ? getTime(doc.done_date) : '还未完成'}`)
-        } else {
-          console.log('没有找到任务')
-        }
-        close();
-      })
+    if(!taskExist(argv, null, '请输入要获取的任务编号')) return false;
+    const selected = select(argv.task)
+    if(selected) {
+      console.log(selected)
+    } else {
+      console.log('不存在该任务')
+    }
   })
+
+  .command('$0', 'the default command', () => {}, (argv) => {
+      const datas = get();
+      console.log(datas);
+  })
+
   .argv
+
