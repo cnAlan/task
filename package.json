@@ -1,8 +1,10 @@
 {
-  "name": "task",
-  "version": "1.0.0",
+  "name": "task-command",
+  "version": "1.0.1",
   "main": "index.js",
   "license": "MIT",
+  "author": "cnAlan",
+  "description": "A simple task management tool",
   "dependencies": {
     "yargs": "^12.0.2"
   },
